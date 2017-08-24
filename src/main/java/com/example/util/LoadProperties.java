@@ -1,4 +1,4 @@
-package com.example.lib;
+package com.example.util;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,10 +14,10 @@ public class LoadProperties {
     private static final Logger logger = Logger.getLogger(LoadProperties.class.getCanonicalName());
     private static final String __VERSION__ = "1.0.0";
     private static final String __CONFIG_PATH__ = "setting.properties";
-    private static File DOC_ROOT;
     private static int PORT;
+    private static File WEB_ROOT;
 
-    private static LoadProperties instance;
+    private static LoadProperties instance = null;
 
     private LoadProperties() throws IOException {
         Properties properties = new Properties();
@@ -25,31 +25,24 @@ public class LoadProperties {
         properties.load(inputStream);
         inputStream.close();
 
-        DOC_ROOT = new File(properties.getProperty("conf.dir"));
         PORT = Integer.parseInt(properties.getProperty("conf.port"));
+        WEB_ROOT = new File(properties.getProperty("conf.webroot"));
 
         System.out.println("*--------------------------*");
-        System.out.println("   root: " + DOC_ROOT);
+        System.out.println("**      START SERVER      **");
         System.out.println("   port: " + PORT);
         System.out.println("*--------------------------*");
     }
 
     public static LoadProperties getInstance() {
-        try {
-            instance = new LoadProperties();
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Failed loaded properties", e);
+        if(instance == null) {
+            try {
+                instance = new LoadProperties();
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Failed loaded properties", e);
+            }
         }
         return instance;
-    }
-
-    /**
-     * Gets docroot.
-     *
-     * @return the docroot
-     */
-    public static File getDocRoot() {
-        return DOC_ROOT;
     }
 
     /**
@@ -59,5 +52,14 @@ public class LoadProperties {
      */
     public static int getPort() {
         return PORT;
+    }
+
+    /**
+     * Gets webroot.
+     *
+     * @return the webroot
+     */
+    public static File getWebroot() {
+        return WEB_ROOT;
     }
 }

@@ -8,35 +8,28 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.example.util.LoadProperties;
+
 /**
  * Created by Eden on 2017. 8. 24..
  */
 public class RequestProcessor implements Runnable {
     private final static Logger logger = Logger.getLogger(RequestProcessor.class.getCanonicalName());
-    private File rootDirectory;
     private String indexFileName = "index.html";
     private Socket connection;
 
-    public RequestProcessor(File rootDirectory, String indexFileName, Socket connection) {
-        if (rootDirectory.isFile()) {
-            throw new IllegalArgumentException(
-                "rootDirectory must be a directory, not a file");
-        }
-        try {
-            rootDirectory = rootDirectory.getCanonicalFile();
-        } catch (IOException ex) {
-        }
-        this.rootDirectory = rootDirectory;
-        if (indexFileName != null)
-            this.indexFileName = indexFileName;
+    public RequestProcessor(Socket connection) {
         this.connection = connection;
     }
 
     @Override
     public void run() {
-        // for security checks
-        String root = rootDirectory.getPath();
+        // 상대 경로로 was 경로 파악하기
+        File path = new File("");
+        String root = path.getAbsolutePath();
+
         try {
+            LoadProperties properties = LoadProperties.getInstance();
             OutputStream raw = new BufferedOutputStream(connection.getOutputStream());
             Writer out = new OutputStreamWriter(raw);
             Reader in = new InputStreamReader(new BufferedInputStream(connection.getInputStream()), "UTF-8");
@@ -60,7 +53,10 @@ public class RequestProcessor implements Runnable {
                 if (tokens.length > 2) {
                     version = tokens[2];
                 }
-                File theFile = new File(rootDirectory, fileName.substring(1, fileName.length()));
+
+                fileName = root.concat(properties.getWebroot().getPath().concat(fileName));
+                File theFile = new File(fileName);
+
                 if (theFile.canRead()
                     // Don't let clients outside the document root
                     && theFile.getCanonicalPath().startsWith(root)) {
@@ -116,7 +112,7 @@ public class RequestProcessor implements Runnable {
         out.write(responseCode + "\r\n");
         Date now = new Date();
         out.write("Date: " + now + "\r\n");
-        out.write("Server: JHTTP 2.0\r\n");
+        out.write("Server: HTTP 1.1\r\n");
         out.write("Content-length: " + length + "\r\n");
         out.write("Content-type: " + contentType + "\r\n\r\n");
         out.flush();

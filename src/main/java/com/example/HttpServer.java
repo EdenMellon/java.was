@@ -8,36 +8,28 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import com.example.lib.LoadProperties;
+import com.example.util.LoadProperties;
 
 /**
  * Created by Eden on 2017. 8. 24..
  */
 public class HttpServer {
     private static final Logger logger = Logger.getLogger(HttpServer.class.getCanonicalName());
-    private static final int NUM_THREADS = 50;
+    private static final int NUM_THREADS = 10;
     private static final String INDEX_FILE = "index.html";
-    private File rootDirectory;
     private int port = 8080;
 
-    public HttpServer(File rootDirectory, int port) throws IOException {
-        if (!rootDirectory.isDirectory()) {
-            throw new IOException(rootDirectory
-                + " does not exist as a directory");
-        }
-        this.rootDirectory = rootDirectory;
+    public HttpServer(int port) throws IOException {
         this.port = port;
     }
 
     public void start() throws IOException {
         ExecutorService pool = Executors.newFixedThreadPool(NUM_THREADS);
         try (ServerSocket server = new ServerSocket(port)) {
-            logger.info("Accepting connections on port " + server.getLocalPort());
-            logger.info("Document Root: " + rootDirectory);
             while (true) {
                 try {
                     Socket request = server.accept();
-                    Runnable r = new RequestProcessor(rootDirectory, INDEX_FILE, request);
+                    Runnable r = new RequestProcessor(request);
                     pool.submit(r);
                 } catch (IOException ex) {
                     logger.log(Level.WARNING, "Error accepting connection", ex);
@@ -47,18 +39,10 @@ public class HttpServer {
     }
 
     public static void main(String[] args) {
-        // get the Document root
-        File docroot;
-
-
+        // singleton 패턴으로 static configuration 구현.
+        // server01, server02 설정 파일 분리.
         LoadProperties properties = LoadProperties.getInstance();
-        try {
-            docroot = properties.getDocRoot();
-        } catch (ArrayIndexOutOfBoundsException ex) {
-            System.out.println("Usage: java JHTTP docroot port");
-            return;
-        }
-        // set the port to listen on
+
         int port;
         try {
             port = Integer.parseInt(String.valueOf(properties.getPort()));
@@ -66,9 +50,8 @@ public class HttpServer {
         } catch (RuntimeException ex) {
             port = 80;
         }
-        System.out.println(port);
         try {
-            HttpServer webserver = new HttpServer(docroot, port);
+            HttpServer webserver = new HttpServer(port);
             webserver.start();
         } catch (IOException ex) {
             logger.log(Level.SEVERE, "Server could not start", ex);
