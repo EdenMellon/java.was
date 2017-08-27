@@ -1,0 +1,14 @@
+{
+  "mapping_package":[
+    {
+      "name": "com.simple",
+      "routes": {
+        "/Hello": "Hello",
+        "/service.Hello": "service.Hello",
+        "/Greeting": "Hello",
+        "/super.Greeting": "service.Hello",
+        "/time": "Time"
+      }
+    }
+  ]
+}

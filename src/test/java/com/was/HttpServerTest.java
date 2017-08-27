@@ -1,4 +1,4 @@
-package com.example;
+package com.was;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -33,5 +33,10 @@ public class HttpServerTest extends TestCase
     public void testApp()
     {
         assertTrue( true );
+    }
+
+    public void HttpServerRun() throws Exception {
+        HttpServer webServer = new HttpServer(8000);
+        webServer.start();
     }
 }
